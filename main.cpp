@@ -2,6 +2,8 @@
 #include <cstring>
 #include "image.h"
 
+static const unsigned short order[19] = {16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15}; /* permutation of code lengths */
+
 int main() {
 	{
 		uint32_t i=0x01020304;
@@ -43,10 +45,6 @@ int main() {
 	LOGB(compressedData[4]);
 	LOGB(compressedData[5]);
 	LOGB(compressedData[6]);
-	
-	
-
-	
 	
 	return 0;
 }
