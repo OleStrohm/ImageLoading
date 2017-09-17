@@ -3,5 +3,5 @@ project(ImageLoading)
 
 set(CMAKE_CXX_STANDARD 11)
 
-set(SOURCE_FILES main.cpp image.cpp image.h)
+set(SOURCE_FILES main.cpp image.cpp image.h bitarray.cpp bitarray.h)
 add_executable(ImageLoading ${SOURCE_FILES})

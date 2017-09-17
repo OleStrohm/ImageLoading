@@ -56,9 +56,9 @@ void Image::formatIHDR() {
 std::vector<unsigned char> Image::extractCompressedPixelData(const Chunk& chunk) {
 	std::vector<unsigned char> compressedData;
 	compressedData.reserve(chunk.length);
-	for(int i = 0; i < chunk.length; i++) {
+	for(int i = 0; i < chunk.length; i++)
 		compressedData.push_back(chunk.data[i]);
-	}
+	
 	return compressedData;
 }
 

@@ -1,6 +1,7 @@
 
 #include <cstring>
 #include "image.h"
+#include "bitarray.h"
 
 static const unsigned short order[19] = {16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15}; /* permutation of code lengths */
 
@@ -34,17 +35,42 @@ int main() {
 	LOG(pixelChunk.length);
 	LOG("");
 
-	std::vector<unsigned char> compressedData = image.extractCompressedPixelData(*image.chunks[index]);
+	std::vector<unsigned char> compressedData = image.extractCompressedPixelData(pixelChunk);
 	LOG("CMF:");
-	LOGB(compressedData[0] + (unsigned char) (8 <<4));
-	LOG("FLG:");
-	LOGB(compressedData[1]); // 16-bit sum is 14415 % 31 == 0
+	BitArray CMFbits(compressedData[0], 8);
+	LOG("\tHopefully this is 8: " << (unsigned int)CMFbits.read(0, 4, false));
+	LOG("\tCINFO: " << (unsigned int)CMFbits.read(4, 4, false));
+	LOG(CMFbits);
+	
+	BitArray flagBits(compressedData[1], 8);
+	LOG("FLG: " << flagBits);
+	LOG("\tFDICT:" << (unsigned int) flagBits.read(4, 1));
 	LOG("");
-	LOGB(compressedData[2]);
-	LOGB(compressedData[3]);
-	LOGB(compressedData[4]);
-	LOGB(compressedData[5]);
-	LOGB(compressedData[6]);
+	LOG("Checks out: " << (((CMFbits.read(0, 8) << 8) + (flagBits.read(0, 8))) % 31 == 0));
+	LOG("");
+	
+	BitArray nextBits(compressedData[2], 8);
+	LOG("Last block?: " << (unsigned int) nextBits.read(0, 1));
+	switch(nextBits.read(1, 2)) {
+		case 0:
+			LOG("Compression Method: uncompressed");
+			break;
+		case 1:
+			LOG("Compression Method: fixed");
+			break;
+		case 2:
+			LOG("Compression Method: dynamic");
+			break;
+		default:
+			LOG("Compression Method: ERROR");
+	}
+	LOG(nextBits);
+	BitArray actualData(nextBits.read(3, 5), 5);
+	actualData.pushBack(compressedData[3]);
+	actualData.pushBack(compressedData[4]);
+	actualData.pushBack(compressedData[5]);
+	actualData.pushBack(compressedData[6]);
+	LOG(actualData);
 	
 	return 0;
 }

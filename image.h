@@ -14,7 +14,7 @@
 unsigned char reversed(unsigned char value);
 
 #define LOG(x) (std::cout << x << std::endl)
-#define LOGB(x) (std::cout << (std::bitset<8>)reversed(x) << std::endl)
+#define LOGB(x) (std::cout << (std::bitset<8>)(x) << std::endl)
 
 //unsigned int crc_table[256];
 //
