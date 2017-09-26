@@ -3,29 +3,40 @@
 //
 
 #include "bitarray.h"
-#include <string>
 
-BitArray::BitArray()
-		: localSize(0), totalSize(0) {
+BitArray::BitArray() {
 	current = new std::bitset<BITSET_SIZE>();
 	bitsets.push_back(current);
 }
 
-BitArray::BitArray(const int& value, unsigned int length)
-		: localSize(0), totalSize(0) {
+BitArray::BitArray(const BitArray& other) {
+	current = new std::bitset<BITSET_SIZE>();
+	bitsets.push_back(current);
+	
+	for(unsigned int i = 0; i < other.getSize(); i++)
+		pushBack(other.getBit(i));
+}
+
+BitArray::BitArray(const unsigned int& length) {
+	current = new std::bitset<BITSET_SIZE>();
+	bitsets.push_back(current);
+	
+	for (unsigned int i = 0; i < length; i++)
+		pushBack((bool) 0);
+}
+
+BitArray::BitArray(const int& value, unsigned int length) {
 	current = new std::bitset<BITSET_SIZE>();
 	bitsets.push_back(current);
 	
 	if (length > sizeof(int) * 8)
 		length = sizeof(int) * 8;
 	
-	for (unsigned int i = 0; i < length; i++) {
+	for (unsigned int i = 0; i < length; i++)
 		pushBack((bool) ((value >> i) & 0x1));
-	}
 }
 
-BitArray::BitArray(std::string& bits)
-		: localSize(0), totalSize(0) {
+BitArray::BitArray(const std::string& bits) {
 	current = new std::bitset<BITSET_SIZE>();
 	bitsets.push_back(current);
 	
@@ -49,6 +60,7 @@ BitArray::~BitArray() {
 void BitArray::pushBack(const bool& one) {
 	if (localSize == BITSET_SIZE) {
 		current = new std::bitset<BITSET_SIZE>();
+		bitsets.push_back(current);
 		localSize = 0;
 	}
 	(*current)[localSize] = one;
@@ -57,7 +69,7 @@ void BitArray::pushBack(const bool& one) {
 }
 
 void BitArray::pushBack(const unsigned char& byte) {
-	for (unsigned int i = 0; i < sizeof(byte) * 8; i++) {
+	for (unsigned int i = 0; i < sizeof(unsigned char) * 8; i++) {
 		pushBack((bool) ((byte >> i) & 1));
 	}
 }
@@ -69,6 +81,16 @@ void BitArray::pushBack(const std::string& bits) {
 		else if (c == '1')
 			pushBack((bool) 1);
 	}
+}
+
+void BitArray::pushFront(const bool& one) {
+	bool last = one;
+	for(unsigned int i = 0; i < getSize(); i++) {
+		bool lastTemp = getBit(i);
+		setBit(i, last);
+		last = lastTemp;
+	}
+	pushBack(last);
 }
 
 void BitArray::setBit(const unsigned int& pos, bool one) {
@@ -109,10 +131,10 @@ void BitArray::add(const BitArray& value) {
 			addBit(i);
 }
 
-unsigned char BitArray::read(const unsigned int& position, const unsigned int& length, const bool& reverse) {
-	unsigned char result = 0;
-	for(unsigned int i = 0; i < length; i++) {
-		if(getBit(position + (reverse ? length - 1 - i : i)))
+unsigned int BitArray::read(const unsigned int& position, const unsigned int& length, const bool& reverse) {
+	unsigned int result = 0;
+	for (unsigned int i = 0; i < length; i++) {
+		if (getBit(position + (reverse ? length - 1 - i : i)))
 			result |= 1 << i;
 	}
 	return result;
@@ -125,9 +147,23 @@ void BitArray::updateSize() {
 const std::string BitArray::toString() const {
 	std::string out;
 	for (unsigned int i = 0; i < getSize(); i++) {
-		out = (getBit(i) ? "1" : "0") + out;
+		out += (getBit(i) ? "1" : "0");
 	}
 	return out;
+}
+
+bool BitArray::operator==(const BitArray& right) const {
+	if(getSize() != right.getSize())
+		return false;
+	
+	for(unsigned int i = 0; i < getSize(); i++) {
+		if (getBit(i) && (!right.getBit(i)))
+			return false;
+		if ((!getBit(i)) && right.getBit(i))
+			return false;
+	}
+	
+	return true;
 }
 
 std::ostream& operator<<(std::ostream& stream, const BitArray& array) {
