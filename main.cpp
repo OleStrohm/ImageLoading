@@ -150,4 +150,6 @@ int main() {
 		std::printf("\n");
 	}
 	
+	std::cin.get();
+	return 0;
 }
