@@ -6,32 +6,6 @@
 
 #include <iostream>
 
-std::string addOne(const std::string& string) {
-	std::string out;
-	bool carry = true;
-	for (int i = (int) string.size() - 1; i >= 0; i--) {
-		char c = string.at(i);
-		if (c == '1') {
-			if (carry) {
-				out.insert(0, 1, '0');
-				carry = true;
-			} else {
-				out.insert(0, 1, '1');
-				carry = false;
-			}
-		} else {
-			if (carry) {
-				out.insert(0, 1, '1');
-				carry = false;
-			} else {
-				out.insert(0, 1, '0');
-				carry = false;
-			}
-		}
-	}
-	return out;
-}
-
 Tree::Tree(std::vector<Leaf*>& data) {
 	if (data.empty())
 		return;
@@ -99,13 +73,30 @@ Tree::Tree(std::vector<Leaf*>& data) {
 	saveCodes();
 }
 
-Tree::Tree(const std::string* symbols, const unsigned int* lengths, const unsigned int& size) {
+Tree::Tree(std::vector<std::string> symbols, std::vector<unsigned int> lengths) {
+	unsigned int size = (unsigned int) (symbols.size() < lengths.size() ? symbols.size() : lengths.size());
+
+	std::cout << "what";
+
+	for (unsigned int i = 0; i < size; i++) {
+		if(lengths[i] == 0) {
+			lengths.erase((lengths.begin() + i));
+			symbols.erase((symbols.begin() + i));
+			std::cout << "deleted " << symbols[i];
+			size--;
+			i--;
+		}
+	}
+
+	for (unsigned int i = 0; i < size; i++) {
+		std::cout << "length of \"" << symbols[i] << "\": " << lengths[i];
+	}
+
 	unsigned int longestCode = 0;
 	for (unsigned int i = 0; i < size; i++) {
 		if (longestCode < lengths[i])
 			longestCode = lengths[i];
 	}
-//	std::cout << "longest: " << longestCode << std::endl;
 	
 	std::vector<unsigned int> numCodesOfLength;
 	numCodesOfLength.reserve(longestCode + 1);
@@ -116,10 +107,6 @@ Tree::Tree(const std::string* symbols, const unsigned int* lengths, const unsign
 	for (unsigned int i = 0; i < size; i++) {
 		numCodesOfLength[lengths[i]]++;
 	}
-
-//	for (unsigned int i = 1; i <= longestCode; i++) {
-//		std::cout << "codes of length " << i << ": " << numCodesOfLength[i] << std::endl;
-//	}
 	
 	std::vector<BitArray*> firstCode;
 	firstCode.reserve(longestCode + 1);
@@ -132,10 +119,6 @@ Tree::Tree(const std::string* symbols, const unsigned int* lengths, const unsign
 		firstCode.push_back(new BitArray(code, i));
 	}
 
-//	for (int c = 1; c <= longestCode; c++) {
-//		std::cout << firstCode[c] << std::endl;
-//	}
-	
 	std::vector<BitArray*> actualCodes;
 	actualCodes.reserve(size);
 	for (unsigned int s = 0; s < size; s++) {
@@ -145,17 +128,12 @@ Tree::Tree(const std::string* symbols, const unsigned int* lengths, const unsign
 		actualCodes.push_back(code);
 	}
 	
-//	for (unsigned int s = 0; s < size; s++) {
-//		std::cout << symbols[s] << ": " << actualCodes[s] << std::endl;
-//	}
-	
 	root = new InternalNode(nullptr, nullptr);
 	BitArray start;
 	createTree(actualCodes, symbols, root, start);
-//	std::cout << "Finished!";
 }
 
-void Tree::createTree(const std::vector<BitArray*>& codes, const std::string* symbols, Node* parent, const BitArray& curCode) {
+void Tree::createTree(const std::vector<BitArray*>& codes, const std::vector<std::string>& symbols, Node* parent, const BitArray& curCode) {
 	BitArray next0(curCode);
 	next0.pushFront((bool) 0);
 	bool leaf = false;
