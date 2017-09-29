@@ -74,24 +74,21 @@ Tree::Tree(std::vector<Leaf*>& data) {
 }
 
 Tree::Tree(std::vector<std::string> symbols, std::vector<unsigned int> lengths) {
-	unsigned int size = (unsigned int) (symbols.size() < lengths.size() ? symbols.size() : lengths.size());
-
-	std::cout << "what";
-
-	for (unsigned int i = 0; i < size; i++) {
-		if(lengths[i] == 0) {
-			lengths.erase((lengths.begin() + i));
-			symbols.erase((symbols.begin() + i));
-			std::cout << "deleted " << symbols[i];
-			size--;
-			i--;
+	auto lPos = lengths.begin();
+	auto sPos = symbols.begin();
+	
+	while (lPos != lengths.end() && sPos != symbols.end()) {
+		if (*lPos == 0) {
+			lengths.erase(lPos);
+			symbols.erase(sPos);
+		} else {
+			lPos++;
+			sPos++;
 		}
 	}
-
-	for (unsigned int i = 0; i < size; i++) {
-		std::cout << "length of \"" << symbols[i] << "\": " << lengths[i];
-	}
-
+	
+	unsigned int size = (symbols.size() < lengths.size() ? (unsigned int) symbols.size() : (unsigned int) lengths.size());
+	
 	unsigned int longestCode = 0;
 	for (unsigned int i = 0; i < size; i++) {
 		if (longestCode < lengths[i])
@@ -118,7 +115,7 @@ Tree::Tree(std::vector<std::string> symbols, std::vector<unsigned int> lengths) 
 		code <<= 1;
 		firstCode.push_back(new BitArray(code, i));
 	}
-
+	
 	std::vector<BitArray*> actualCodes;
 	actualCodes.reserve(size);
 	for (unsigned int s = 0; s < size; s++) {
