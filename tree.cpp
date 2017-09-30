@@ -73,7 +73,7 @@ Tree::Tree(std::vector<Leaf*>& data) {
 	saveCodes();
 }
 
-Tree::Tree(std::vector<std::string> symbols, std::vector<unsigned int> lengths) {
+Tree::Tree(std::vector<unsigned int> symbols, std::vector<unsigned int> lengths) {
 	auto lPos = lengths.begin();
 	auto sPos = symbols.begin();
 	
@@ -130,7 +130,7 @@ Tree::Tree(std::vector<std::string> symbols, std::vector<unsigned int> lengths) 
 	createTree(actualCodes, symbols, root, start);
 }
 
-void Tree::createTree(const std::vector<BitArray*>& codes, const std::vector<std::string>& symbols, Node* parent, const BitArray& curCode) {
+void Tree::createTree(const std::vector<BitArray*>& codes, const std::vector<unsigned int>& symbols, Node* parent, const BitArray& curCode) {
 	BitArray next0(curCode);
 	next0.pushFront((bool) 0);
 	bool leaf = false;
@@ -187,7 +187,7 @@ std::string Tree::uncompress(const std::string& compressed) {
 			current = ((InternalNode*) current)->getChild1();
 		
 		if (!current->internal) {
-			uncompressed += ((Leaf*) current)->getSymbol();
+			uncompressed += std::to_string(((Leaf*) current)->getSymbol());
 			current = root;
 		}
 	}
@@ -206,7 +206,7 @@ std::string Tree::uncompress(const BitArray& compressed) {
 			current = ((InternalNode*) current)->getChild0();
 		
 		if (!current->internal) {
-			uncompressed += ((Leaf*) current)->getSymbol();
+			uncompressed += std::to_string(((Leaf*) current)->getSymbol());
 			current = root;
 		}
 	}
@@ -214,11 +214,11 @@ std::string Tree::uncompress(const BitArray& compressed) {
 	return uncompressed;
 }
 
-std::string Tree::uncompressOneCode(const std::string& compressed, const unsigned int& start, unsigned int* end) {
+unsigned int Tree::uncompressOneCode(const std::string& compressed, const unsigned int& start, unsigned int* end) {
 	Node* current = root;
 	std::string code;
 	
-	for (unsigned int i = 0; true; i++) {
+	for (unsigned int i = 0; i < compressed.size(); i++) {
 		const char c = compressed.at(start + i);
 		if (c == '0')
 			current = ((InternalNode*) current)->getChild0();
@@ -230,9 +230,11 @@ std::string Tree::uncompressOneCode(const std::string& compressed, const unsigne
 			return ((Leaf*) current)->getSymbol();
 		}
 	}
+	
+	return 0;
 }
 
-std::string Tree::uncompressOneCode(const BitArray& compressed, const unsigned int& start, unsigned int* end) {
+unsigned int Tree::uncompressOneCode(const BitArray& compressed, const unsigned int& start, unsigned int* end) {
 	Node* current = root;
 	std::string code;
 	
@@ -251,15 +253,13 @@ std::string Tree::uncompressOneCode(const BitArray& compressed, const unsigned i
 	
 	*end = compressed.getSize();
 	
-	return "";
+	return 0;
 }
 
-BitArray* Tree::compress(const std::string& uncompressed) {
+BitArray* Tree::compress(const std::vector<unsigned int>& uncompressed) {
 	BitArray* a = new BitArray();
-	for (char c : uncompressed) {
-		std::string s = "";
-		s += c;
-		a->pushBack(codes[s]);
+	for (unsigned int symbol : uncompressed) {
+		a->pushBack(codes[symbol]);
 	}
 	return a;
 }

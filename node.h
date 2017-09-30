@@ -21,7 +21,7 @@ public:
 	virtual ~Node() = default;
 	
 	virtual void print(const std::string&) {}
-	virtual void saveCode(std::map<std::string, std::string>& codes, std::string code) {}
+	virtual void saveCode(std::map<unsigned int, std::string>& codes, const std::string& code) {}
 	
 	inline const unsigned int& getFrequency() const {
 		return frequency;
@@ -46,7 +46,7 @@ public:
 		child1->print(msg + "1");
 	}
 	
-	void saveCode(std::map<std::string, std::string>& codes, std::string code) override {
+	void saveCode(std::map<unsigned int, std::string>& codes, const std::string& code) override {
 		child0->saveCode(codes, code + "0");
 		child1->saveCode(codes, code + "1");
 	}
@@ -59,20 +59,20 @@ public:
 };
 
 class Leaf : public Node {
-	std::string symbol;
+	unsigned int symbol;
 public:
-	Leaf(std::string symbol, unsigned int frequency)
-			: Node(frequency, false), symbol(std::move(symbol)) {}
+	Leaf(unsigned int symbol, unsigned int frequency)
+			: Node(frequency, false), symbol(symbol) {}
 	
 	void print(const std::string& msg) override {
 		std::cout << symbol << ": " << msg << std::endl;
 	}
 	
-	void saveCode(std::map<std::string, std::string>& codes, std::string code) override {
+	void saveCode(std::map<unsigned int, std::string>& codes, const std::string& code) override {
 		codes[symbol] = code;
 	}
 	
-	inline const std::string& getSymbol() const {
+	inline const unsigned int& getSymbol() const {
 		return symbol;
 	}
 };

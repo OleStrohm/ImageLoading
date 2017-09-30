@@ -5,35 +5,13 @@
 #pragma once
 
 #include <iostream>
-#include <fstream>
 #include <string>
 #include <vector>
 #include <utility>
-#include <bitset>
-
-unsigned char reversed(unsigned char value);
 
 #define LOG(x) (std::cout << x << std::endl)
-#define LOGB(x) (std::cout << (std::bitset<8>)(x) << std::endl)
 
-//unsigned int crc_table[256];
-//
-//void build_crc32() {
-//	for (unsigned int n = 0; n < 256; n++) {
-//		auto c      = n;
-//		for (unsigned int k = 0; k < 8; k++) {
-//			if (c & 1)
-//				c = (c >> 1) ^ 0xedb88320;
-//			else
-//				c = c >> 1;
-//		}
-//		crc_table[n] = c;
-//	}
-//}
-//
-//void getCRC() {
-//	LOG(crc_table[0]);
-//}
+#define IMAGE_FORMAT_RGBA 6
 
 struct Chunk {
 	unsigned int length;
@@ -45,38 +23,53 @@ struct Chunk {
 			: length(length), type(std::move(type)), data(data), crc(crc) {}
 };
 
-struct Format {
+struct Pixel {
+	union {
+		struct {
+			unsigned char red, green, blue, alpha;
+		};
+		struct {
+			unsigned char r{}, g{}, b{}, a{};
+		};
+	};
+	
+	Pixel(unsigned char alpha, unsigned char red, unsigned char green, unsigned char blue)
+			: alpha(alpha), red(red), green(green), blue(blue) {}
+	Pixel()
+			: alpha(0), red(0), green(0), blue(0) {}
+	
+	unsigned int color() { return a << 24 | r << 16 | g << 8 | b; }
+};
+
+struct ImageFormat {
 	unsigned int width;
 	unsigned int height;
-	char bitDepth;
-	char colorType;
-	char compressionMethod;
-	char filterMethod;
-	char interlaceMethod;
+	unsigned char bitDepth;
+	unsigned char colorFormat;
 	
-	Format()
-			: width(0),height(0),bitDepth(0),colorType(0),compressionMethod(0),filterMethod(0),interlaceMethod(0) {}
+	ImageFormat()
+			: width(0), height(0), bitDepth(0), colorFormat(0) {}
 };
 
 class Image {
-public:
-	std::vector<Chunk*> chunks;
 private:
-	Format format;
+	ImageFormat format;
+	Pixel* pixels;
 public:
-	Image(const std::string& path);
+	explicit Image(const std::string& path);
+	~Image();
 	
-	void init(const std::string& path);
+	inline const Pixel& getPixel(unsigned int& x, unsigned int& y) { return pixels[x + y * format.width]; }
+	inline const Pixel* const getPixels() const { return pixels; }
+	inline const unsigned int& getWidth() const { return format.width; }
+	inline const unsigned int& getHeight() const { return format.height; }
+	inline const unsigned char& getBitDepth() const { return format.bitDepth; }
+	inline const unsigned char& getColorFormat() const { return format.colorFormat; }
 	
-	void formatIHDR();
-	std::vector<unsigned char> extractCompressedPixelData(const Chunk& chunk);
-	void loadChunks(const unsigned char* data, unsigned int size);
-	
-	inline const Format& getFormat() const {
-		return format;
-	}
+	inline const ImageFormat& getFormat() const { return format; }
 private:
-	Chunk* loadChunk(const unsigned char* data, unsigned int& offset);
+	void loadChunks(std::vector<Chunk>& chunks, const unsigned char* data, unsigned int size);
+	Chunk loadChunk(const unsigned char* data, unsigned int& offset);
 };
 
 
