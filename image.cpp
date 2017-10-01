@@ -171,7 +171,7 @@ Image::Image(const std::string& path) {
 					unsigned int extra = bitStream.read(pos, 2);
 					pos += 2;
 					
-					unsigned long long int copyPos = litAndDistLengths.size() - 1;
+					unsigned int copyPos = (unsigned int) (litAndDistLengths.size() - 1);
 					for (unsigned int i = 0; i < 3 + extra; i++) {
 						litAndDistLengths.push_back(litAndDistLengths[copyPos]);
 					}
@@ -267,6 +267,9 @@ Image::Image(const std::string& path) {
 			pixels[x + y * format.width].a = (unsigned char) dataStream[i + 3];
 		}
 	}
+	
+	// it always returns to RGBA
+	format.colorFormat = IMAGE_FORMAT_RGBA;
 }
 
 Image::~Image() {
