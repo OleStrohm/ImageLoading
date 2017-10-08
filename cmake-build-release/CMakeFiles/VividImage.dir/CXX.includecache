@@ -1,0 +1,68 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+D:/workspace_programming/Workspace C++/CL projects/ImageLoading/bitarray.cpp
+bitarray.h
+D:/workspace_programming/Workspace C++/CL projects/ImageLoading/bitarray.h
+
+D:/workspace_programming/Workspace C++/CL projects/ImageLoading/bitarray.h
+bitset
+-
+vector
+-
+iostream
+-
+
+D:/workspace_programming/Workspace C++/CL projects/ImageLoading/image.cpp
+image.h
+D:/workspace_programming/Workspace C++/CL projects/ImageLoading/image.h
+sstream
+-
+fstream
+-
+bitarray.h
+D:/workspace_programming/Workspace C++/CL projects/ImageLoading/bitarray.h
+tree.h
+D:/workspace_programming/Workspace C++/CL projects/ImageLoading/tree.h
+
+D:/workspace_programming/Workspace C++/CL projects/ImageLoading/image.h
+iostream
+-
+string
+-
+vector
+-
+utility
+-
+
+D:/workspace_programming/Workspace C++/CL projects/ImageLoading/node.h
+string
+-
+utility
+-
+iostream
+-
+map
+-
+
+D:/workspace_programming/Workspace C++/CL projects/ImageLoading/tree.cpp
+tree.h
+D:/workspace_programming/Workspace C++/CL projects/ImageLoading/tree.h
+iostream
+-
+
+D:/workspace_programming/Workspace C++/CL projects/ImageLoading/tree.h
+node.h
+D:/workspace_programming/Workspace C++/CL projects/ImageLoading/node.h
+bitarray.h
+D:/workspace_programming/Workspace C++/CL projects/ImageLoading/bitarray.h
+vector
+-
+map
+-
+
