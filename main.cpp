@@ -4,7 +4,7 @@ int main() {
 	using namespace vivid;
 	using namespace util;
 	
-	Image image("cartoon_goat.png");
+	Image image("res/cartoon_goat.png");
 	LOG("Size: " << image.getWidth() << "x" << image.getHeight());
 	const Pixel* pixels = image.getPixels();
 
