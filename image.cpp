@@ -30,23 +30,24 @@ namespace vivid { namespace util {
 			std::ifstream stream(path, std::ifstream::in | std::ifstream::ate | std::ifstream::binary);
 			auto size = (unsigned int) stream.tellg();
 			if (!stream.good()) {
-				pixels = new Pixel(0, 0, 0, 0);
+				data = new unsigned char[3] {0, 0, 0};
 				format.width = 1;
 				format.height = 1;
 				format.bitDepth = 8;
-				format.colorFormat = VIVID_IMAGE_FORMAT_RGBA;
+				format.colorFormat = VIVID_IMAGE_FORMAT_RGB;
+				return;
 			}
 			stream.seekg(0, std::ifstream::beg);
 			
-			unsigned char data[size];
+			unsigned char fileData[size];
 			unsigned int position = 0;
 			char in;
 			while (stream.get(in))
-				data[position++] = (unsigned char) in;
+				fileData[position++] = (unsigned char) in;
 			
 			stream.close();
 			
-			loadChunks(chunks, data, size);
+			loadChunks(chunks, fileData, size);
 			
 			// Sets the format of the image
 			std::vector<unsigned char>& dataIDHR = chunks[0].data; // the IDAT chunk
@@ -55,11 +56,12 @@ namespace vivid { namespace util {
 			format.bitDepth = dataIDHR[8];
 			format.colorFormat = dataIDHR[9];
 			if (format.colorFormat == 3) {
-				pixels = new Pixel(255, 0, 0, 0);
+				data = new unsigned char[3] {0, 0, 0};
 				format.width = 1;
 				format.height = 1;
 				format.bitDepth = 8;
-				format.colorFormat = VIVID_IMAGE_FORMAT_RGBA;
+				format.colorFormat = VIVID_IMAGE_FORMAT_RGB;
+				return;
 			}
 		}
 		
@@ -258,29 +260,27 @@ namespace vivid { namespace util {
 		}
 		
 		// todo: add pixel creation for types 0, 2 and 4
-		if (format.colorFormat != 6) {
-			std::cout << "ABORT!" << std::endl;
-		}
-		
-		pixels = new Pixel[format.width * format.height];
-		
-		unsigned int actualWidth = 1 + format.width * 4;
-		for (unsigned int y = 0; y < format.height; y++) {
-			for (unsigned int x = 0; x < format.width; x++) {
-				unsigned int i = 1 + 4 * x + y * actualWidth;
-				pixels[x + y * format.width].r = (unsigned char) dataStream[i + 0];
-				pixels[x + y * format.width].g = (unsigned char) dataStream[i + 1];
-				pixels[x + y * format.width].b = (unsigned char) dataStream[i + 2];
-				pixels[x + y * format.width].a = (unsigned char) dataStream[i + 3];
+		if (format.colorFormat == 6) {
+			PixelRGBA* pixels = new PixelRGBA[format.width * format.height];
+			
+			unsigned int actualWidth = 1 + format.width * 4;
+			for (unsigned int y = 0; y < format.height; y++) {
+				for (unsigned int x = 0; x < format.width; x++) {
+					unsigned int i = 1 + 4 * x + y * actualWidth;
+					pixels[x + y * format.width].r = (unsigned char) dataStream[i + 0];
+					pixels[x + y * format.width].g = (unsigned char) dataStream[i + 1];
+					pixels[x + y * format.width].b = (unsigned char) dataStream[i + 2];
+					pixels[x + y * format.width].a = (unsigned char) dataStream[i + 3];
+				}
 			}
+			
+			data = (unsigned char*) pixels;
+			format.colorFormat = VIVID_IMAGE_FORMAT_RGBA;
 		}
-		
-		// it always returns to RGBA
-		format.colorFormat = VIVID_IMAGE_FORMAT_RGBA;
 	}
 	
 	Image::~Image() {
-		delete[] pixels;
+		delete[] data;
 	}
 	
 	void Image::loadChunks(std::vector<Chunk>& chunks, const unsigned char* data, unsigned int size) {

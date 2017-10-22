@@ -9,8 +9,6 @@
 #include <vector>
 #include <utility>
 
-#define LOG(x) (std::cout << x << std::endl)
-
 #ifdef VIVID_OPENGL
 #define VIVID_IMAGE_FORMAT_RGB 0x1907
 #define VIVID_IMAGE_FORMAT_RGBA 0x1908
@@ -31,7 +29,25 @@ namespace vivid { namespace util {
 				: length(length), type(std::move(type)), data(data), crc(crc) {}
 	};
 	
-	struct Pixel {
+	struct PixelRGB {
+		union {
+			struct {
+				unsigned char red, green, blue;
+			};
+			struct {
+				unsigned char r{}, g{}, b{};
+			};
+		};
+		
+		PixelRGB(unsigned char red, unsigned char green, unsigned char blue)
+				: red(red), green(green), blue(blue) {}
+		PixelRGB()
+				: red(0), green(0), blue(0) {}
+		
+		unsigned int color() const { return ((unsigned int) 0xFF) << 24 | r << 16 | g << 8 | b; }
+	};
+	
+	struct PixelRGBA {
 		union {
 			struct {
 				unsigned char red, green, blue, alpha;
@@ -41,10 +57,12 @@ namespace vivid { namespace util {
 			};
 		};
 		
-		Pixel(unsigned char alpha, unsigned char red, unsigned char green, unsigned char blue)
+		PixelRGBA(unsigned char alpha, unsigned char red, unsigned char green, unsigned char blue)
 				: alpha(alpha), red(red), green(green), blue(blue) {}
-		Pixel()
+		PixelRGBA()
 				: alpha(0), red(0), green(0), blue(0) {}
+		PixelRGBA(const PixelRGB& pixelRGB)
+				: alpha(255), red(pixelRGB.red), green(pixelRGB.green), blue(pixelRGB.blue) {}
 		
 		unsigned int color() const { return a << 24 | r << 16 | g << 8 | b; }
 	};
@@ -53,7 +71,7 @@ namespace vivid { namespace util {
 		unsigned int width;
 		unsigned int height;
 		unsigned char bitDepth;
-		unsigned short colorFormat;
+		unsigned int colorFormat;
 		
 		ImageFormat()
 				: width(0), height(0), bitDepth(0), colorFormat(0) {}
@@ -62,17 +80,22 @@ namespace vivid { namespace util {
 	class Image {
 	private:
 		ImageFormat format;
-		Pixel* pixels;
+		unsigned char* data;
 	public:
 		explicit Image(const std::string& path);
 		~Image();
 		
-		inline const Pixel& getPixel(unsigned int& x, unsigned int& y) { return pixels[x + y * format.width]; }
-		inline const Pixel* const getPixels() const { return pixels; }
+		inline const PixelRGBA getPixel(unsigned int& x, unsigned int& y) {
+			if (getColorFormat() == VIVID_IMAGE_FORMAT_RGBA)
+				return ((PixelRGBA*) data)[x + y * format.width];
+			if (getColorFormat() == VIVID_IMAGE_FORMAT_RGB)
+				return PixelRGBA(((PixelRGB*) data)[x + y * format.width]);
+		}
+		inline const unsigned char* const getData() const { return data; }
 		inline const unsigned int& getWidth() const { return format.width; }
 		inline const unsigned int& getHeight() const { return format.height; }
 		inline const unsigned char& getBitDepth() const { return format.bitDepth; }
-		inline const unsigned short& getColorFormat() const { return format.colorFormat; }
+		inline const unsigned int& getColorFormat() const { return format.colorFormat; }
 		
 		inline const ImageFormat& getFormat() const { return format; }
 	private:
