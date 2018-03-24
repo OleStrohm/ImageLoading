@@ -9,6 +9,8 @@
 #include <vector>
 #include <utility>
 
+#define VIVID_OPENGL
+
 #ifdef VIVID_OPENGL
 #define VIVID_IMAGE_FORMAT_RGB 0x1907
 #define VIVID_IMAGE_FORMAT_RGBA 0x1908
@@ -70,8 +72,11 @@ namespace vivid { namespace util {
 	struct ImageFormat {
 		unsigned int width;
 		unsigned int height;
-		unsigned char bitDepth;
+		unsigned int bitDepth;
 		unsigned int colorFormat;
+		unsigned int compressionMethod;
+		unsigned int filterMethod;
+		unsigned int interlaceMethod;
 		
 		ImageFormat()
 				: width(0), height(0), bitDepth(0), colorFormat(0) {}
@@ -91,10 +96,10 @@ namespace vivid { namespace util {
 			if (getColorFormat() == VIVID_IMAGE_FORMAT_RGB)
 				return PixelRGBA(((PixelRGB*) data)[x + y * format.width]);
 		}
-		inline const unsigned char* const getData() const { return data; }
+		inline const unsigned char* const getPixels() const { return data; }
 		inline const unsigned int& getWidth() const { return format.width; }
 		inline const unsigned int& getHeight() const { return format.height; }
-		inline const unsigned char& getBitDepth() const { return format.bitDepth; }
+		inline const unsigned int& getBitDepth() const { return format.bitDepth; }
 		inline const unsigned int& getColorFormat() const { return format.colorFormat; }
 		
 		inline const ImageFormat& getFormat() const { return format; }

@@ -7,7 +7,7 @@
 #include <fstream>
 #include "bitarray.h"
 #include "tree.h"
-
+#include <vector>
 
 namespace vivid { namespace util {
 
@@ -30,23 +30,24 @@ namespace vivid { namespace util {
 			std::ifstream stream(path, std::ifstream::in | std::ifstream::ate | std::ifstream::binary);
 			auto size = (unsigned int) stream.tellg();
 			if (!stream.good()) {
-				pixels = new Pixel(0, 0, 0, 0);
+				data = new unsigned char[3] {0, 0, 0};
 				format.width = 1;
 				format.height = 1;
 				format.bitDepth = 8;
-				format.colorFormat = VIVID_IMAGE_FORMAT_RGBA;
+				format.colorFormat = VIVID_IMAGE_FORMAT_RGB;
+				return;
 			}
 			stream.seekg(0, std::ifstream::beg);
 			
-			unsigned char data[size];
+			unsigned char fileData[size];
 			unsigned int position = 0;
 			char in;
 			while (stream.get(in))
-				data[position++] = (unsigned char) in;
+				fileData[position++] = (unsigned char) in;
 			
 			stream.close();
 			
-			loadChunks(chunks, data, size);
+			loadChunks(chunks, fileData, size);
 			
 			// Sets the format of the image
 			std::vector<unsigned char>& dataIDHR = chunks[0].data; // the IDAT chunk
@@ -54,12 +55,32 @@ namespace vivid { namespace util {
 			format.height = dataIDHR[4] << 24 | dataIDHR[5] << 16 | dataIDHR[6] << 8 | dataIDHR[7];
 			format.bitDepth = dataIDHR[8];
 			format.colorFormat = dataIDHR[9];
-			if (format.colorFormat == 3) {
-				pixels = new Pixel(255, 0, 0, 0);
+			format.compressionMethod = dataIDHR[10];
+			format.filterMethod = dataIDHR[11];
+			format.interlaceMethod = dataIDHR[12];
+			if (format.colorFormat == 0 || format.colorFormat == 4) {
+				std::cerr << "ERROR - wrong color type: " << format.colorFormat << std::endl;
+				data = new unsigned char[3] {0, 0, 0};
 				format.width = 1;
 				format.height = 1;
 				format.bitDepth = 8;
-				format.colorFormat = VIVID_IMAGE_FORMAT_RGBA;
+				format.colorFormat = VIVID_IMAGE_FORMAT_RGB;
+				return;
+			}
+		}
+		
+		std::vector<int>* palette = nullptr;
+		
+		if(format.colorFormat == 3) {
+			unsigned int indexPLTE = 0;
+			while(chunks[++indexPLTE].type != "PLTE");
+			
+			Chunk PLTE = chunks[indexPLTE];
+			
+			palette = new std::vector<int>(PLTE.length/3);
+			
+			for(int i = 0; i < PLTE.length/3; i++) {
+				(*palette)[i] = PLTE.data[3 * i] << 16 | PLTE.data[3*i + 1] << 8 | PLTE.data[3*i + 2];
 			}
 		}
 		
@@ -74,7 +95,7 @@ namespace vivid { namespace util {
 //		todo: use dict and stuff
 		BitArray flagBits(firstCompressedData[1], 8);
 		bool fDict = flagBits.read(5, 1) != 0;
-		std::cout << "has dict: " << fDict << std::endl;
+		//std::cout << "has dict: " << fDict << std::endl;
 		
 		unsigned int pos = 0; // The current position in the bitstream
 		// The bit stream containing all the bits of the compressed data and then adds all the data to the bitstream
@@ -258,29 +279,57 @@ namespace vivid { namespace util {
 		}
 		
 		// todo: add pixel creation for types 0, 2 and 4
-		if (format.colorFormat != 6) {
-			std::cout << "ABORT!" << std::endl;
-		}
-		
-		pixels = new Pixel[format.width * format.height];
-		
-		unsigned int actualWidth = 1 + format.width * 4;
-		for (unsigned int y = 0; y < format.height; y++) {
-			for (unsigned int x = 0; x < format.width; x++) {
-				unsigned int i = 1 + 4 * x + y * actualWidth;
-				pixels[x + y * format.width].r = (unsigned char) dataStream[i + 0];
-				pixels[x + y * format.width].g = (unsigned char) dataStream[i + 1];
-				pixels[x + y * format.width].b = (unsigned char) dataStream[i + 2];
-				pixels[x + y * format.width].a = (unsigned char) dataStream[i + 3];
+		if (format.colorFormat == 3) {
+			PixelRGB* pixels = new PixelRGB[format.width * format.height];
+			
+			unsigned int actualWidth = 1 + format.width;
+			for (unsigned int y = 0; y < format.height; y++) {
+				for (unsigned int x = 0; x < format.width; x++) {
+					unsigned int i = 1 + x + y * actualWidth;
+					pixels[x + y * format.width].r = (unsigned char) ((*palette)[dataStream[i]] >> 16 & 0xFF);
+					pixels[x + y * format.width].g = (unsigned char) ((*palette)[dataStream[i]] >> 8 & 0xFF);
+					pixels[x + y * format.width].b = (unsigned char) ((*palette)[dataStream[i]] & 0xFF);
+				}
 			}
+			
+			data = (unsigned char*) pixels;
+			format.colorFormat = VIVID_IMAGE_FORMAT_RGB;
+		} else if (format.colorFormat == 2) {
+			PixelRGB* pixels = new PixelRGB[format.width * format.height];
+			
+			unsigned int actualWidth = 1 + format.width * 3;
+			for (unsigned int y = 0; y < format.height; y++) {
+				for (unsigned int x = 0; x < format.width; x++) {
+					unsigned int i = 1 + 3 * x + y * actualWidth;
+					pixels[x + y * format.width].r = (unsigned char) dataStream[i + 0];
+					pixels[x + y * format.width].g = (unsigned char) dataStream[i + 1];
+					pixels[x + y * format.width].b = (unsigned char) dataStream[i + 2];
+				}
+			}
+			
+			data = (unsigned char*) pixels;
+			format.colorFormat = VIVID_IMAGE_FORMAT_RGB;
+		} else if (format.colorFormat == 6) {
+			PixelRGBA* pixels = new PixelRGBA[format.width * format.height];
+			
+			unsigned int actualWidth = 1 + format.width * 4;
+			for (unsigned int y = 0; y < format.height; y++) {
+				for (unsigned int x = 0; x < format.width; x++) {
+					unsigned int i = 1 + 4 * x + y * actualWidth;
+					pixels[x + y * format.width].r = (unsigned char) dataStream[i + 0];
+					pixels[x + y * format.width].g = (unsigned char) dataStream[i + 1];
+					pixels[x + y * format.width].b = (unsigned char) dataStream[i + 2];
+					pixels[x + y * format.width].a = (unsigned char) dataStream[i + 3];
+				}
+			}
+			
+			data = (unsigned char*) pixels;
+			format.colorFormat = VIVID_IMAGE_FORMAT_RGBA;
 		}
-		
-		// it always returns to RGBA
-		format.colorFormat = VIVID_IMAGE_FORMAT_RGBA;
 	}
 	
 	Image::~Image() {
-		delete[] pixels;
+		delete[] data;
 	}
 	
 	void Image::loadChunks(std::vector<Chunk>& chunks, const unsigned char* data, unsigned int size) {

@@ -3,7 +3,7 @@ project(VividImage)
 
 set(CMAKE_CXX_STANDARD 11)
 
-set(BUILD_LIBRARY false)
+set(BUILD_LIBRARY true)
 
 set(MAIN_FILE main.cpp)
 set(HEADER_FILES image.h bitarray.h node.h tree.h)
@@ -15,7 +15,7 @@ if (BUILD_LIBRARY)
 	set_target_properties(VividImage PROPERTIES PREFIX "")
 	set_target_properties(VividImage PROPERTIES ARCHIVE_OUTPUT_DIRECTORY "${PROJECT_SOURCE_DIR}/bin/library/VividImage/libs/")
 	FILE(COPY ${HEADER_FILES} DESTINATION "${PROJECT_SOURCE_DIR}/bin/library/VividImage/include/VividImage/")
-	FILE(COPY ${CPP_FILES} DESTINATION "${PROJECT_SOURCE_DIR}/bin/library/VividImage/src/VividImage/")
+	FILE(COPY ${HEADER_FILES} ${CPP_FILES} DESTINATION "${PROJECT_SOURCE_DIR}/bin/library/VividImage/src/VividImage/")
 	FILE(COPY librarydependecies/CMakeLists.txt DESTINATION "${PROJECT_SOURCE_DIR}/bin/library/VividImage/")
 else (BUILD_LIBRARY)
 	FILE(REMOVE_RECURSE bin/debug/)
