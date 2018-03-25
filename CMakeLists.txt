@@ -3,7 +3,7 @@ project(VividImage)
 
 set(CMAKE_CXX_STANDARD 11)
 
-set(BUILD_LIBRARY true)
+set(BUILD_LIBRARY false)
 
 set(MAIN_FILE main.cpp)
 set(HEADER_FILES image.h bitarray.h node.h tree.h)
