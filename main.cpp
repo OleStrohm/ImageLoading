@@ -15,8 +15,8 @@ int main() {
 	LOG("Interlace method: " << image.getFormat().interlaceMethod);
 	//const PixelRGBA* pixels = (PixelRGBA*) image.getData();
 
-	unsigned int x = 29;
-	unsigned int y = 9;
+	unsigned int x = 0;
+	unsigned int y = 120;
 	PixelRGBA pixel = image.getPixel(x, y);
 	std::printf("%08X\n", pixel.color());
 	

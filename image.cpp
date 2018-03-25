@@ -278,7 +278,7 @@ namespace vivid { namespace util {
 			}
 		}
 		
-		// todo: add pixel creation for types 0, 2 and 4
+		// todo: add pixel creation for types 3, 2 and 4
 		if (format.colorFormat == 3) {
 			PixelRGB* pixels = new PixelRGB[format.width * format.height];
 			
